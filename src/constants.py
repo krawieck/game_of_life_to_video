@@ -1,0 +1,4 @@
+FRAME_LIMIT = 999999
+
+WHITE = 255
+FRAME_EXT = "png"
