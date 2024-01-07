@@ -6,14 +6,20 @@ class Dimension:
     width: int
     height: int
 
+    def __iter__(self):
+        yield from astuple(self)
+
     def astuple(self):
         return astuple(self)
 
 
-@dataclass
+@dataclass(frozen=True)
 class Cell:
     x: int
     y: int
+
+    def __iter__(self):
+        yield from astuple(self)
 
 
 Grid = set[Cell]
@@ -23,6 +29,9 @@ Grid = set[Cell]
 class Neighbors:
     dead: Grid
     alive: Grid
+
+    def __iter__(self):
+        yield from astuple(self)
 
 
 @dataclass
