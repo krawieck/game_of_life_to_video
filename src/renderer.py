@@ -1,73 +1,65 @@
 from pathlib import Path
-from hashlib import md5
-from time import time
+from math import floor
 import os
 
 import cv2
 import numpy as np
 import ffmpeg
 
-from definitions import Grid, Cell, Dimension
-from constants import WHITE, FRAME_EXT
+from definitions import Grid, Dimensions
+from constants import FRAME_EXT, MAX_RES, DEAD_SHADE, ALIVE_SHADE
 
 
-def _scale_up(pixel_grid_list, dimension: Dimension):
-    def scale_factor():
-        pass
+def write_frames(grid_list: list[Grid], *, frames_dir: str | Path, dimension: Dimensions):
+    """
+    create frames based on a list of game states and write them to a given directory
 
+    :param grid_list: list of grids containing each subsequent state from previously executed game of life
+    :param frames_dir: temporary directory where frames will be located (this function is not responsible for cleanup)
+    :param dimension: dimensions of the board
+    :return: ``None``
+    """
 
-def calc_padding(dimension: Dimension):
-    return 1
-
-
-def render_video(grid_list: list[Grid], tmp_dir: str | Path, dimension: Dimension):
-    job_id: str = md5(str(time()).encode()).hexdigest()  # time to md5 hash
-    padding = calc_padding(dimension)
-
-    # MAKE FRAMES
-
-    # make dir
-    frames_dir = os.path.join(tmp_dir, job_id)
-    frames_dir = os.path.join(os.curdir, job_id)  # TEMPORARY
-    os.makedirs(frames_dir)
+    def assume_scale_factor(dimension: Dimensions) -> int:
+        max_dim = max(*dimension)
+        return floor(MAX_RES / max_dim / 2) * 2
 
     for i, grid in enumerate(grid_list):
         # grid to frame
-        print(f'make frame {i}')
-        image = np.zeros(dimension.astuple(), dtype=np.uint8)
-        # for x, y in grid:
-        #     image[x][y] = WHITE
-        x_coords, y_coords = zip(*grid_list)
-        image[x_coords, y_coords] = WHITE
+        image = np.full(dimension.astuple(), DEAD_SHADE, dtype=np.uint8)
+        for x, y in grid:
+            image[x][y] = ALIVE_SHADE
 
-        # add padding
-        # image = np.pad(image, pad_width=padding, mode="constant", constant_values=0)
+        # x_coords, y_coords = zip(*grid_list)
+        # image[x_coords, y_coords] = WHITE
 
         # scale frame
-        # image =
+        scale_factor = assume_scale_factor(dimension)
+        image = np.kron(image, np.ones((scale_factor, scale_factor), dtype=image.dtype))
 
         # save frame
-        file_path = os.path.join(frames_dir, f"{i}.{FRAME_EXT}")
+        file_path = os.path.join(frames_dir, f"{i:010}.{FRAME_EXT}")
         cv2.imwrite(file_path, image)
 
-    # FRAMES TO VIDEO
 
-    # TODO: framerate based on number of frames
+def render_frames(frames_dir: str | Path, framerate: int):
+    output, _ = ffmpeg \
+        .input(os.path.join(frames_dir, f"*.{FRAME_EXT}"), pattern_type="glob",
+               framerate=framerate) \
+        .output("testing.mp4").overwrite_output().run()
 
-    def get_framerate():
-        frames_count = len(grid_list)
-        if frames_count < 5:
-            return 2
-        if frames_count < 30:
-            return 5
-        if frames_count < 100:
-            return 10
-        if frames_count < 500:
-            return 15
-        return 20
 
-    print("ffmpeg time")
-    output, _ = ffmpeg.input(os.path.join(frames_dir, f"*.{FRAME_EXT}"), pattern_type="glob",
-                             framerate=get_framerate()).output("testing.mp4").overwrite_output().run(
-        capture_stdout=True)
-    print(output)
+def assume_framerate(frames_count: int):
+    framerate_stages = [
+        # threshold, framerate
+        (5, 2),
+        (30, 5),
+        (100, 10),
+        (500, 15),
+    ]
+    fallback_framerate = 20
+
+    for threshold, framerate in framerate_stages:
+        if frames_count < threshold:
+            return framerate
+    return fallback_framerate

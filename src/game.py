@@ -3,12 +3,12 @@ from copy import deepcopy
 from typing import Optional
 from functools import partial
 
-from definitions import Neighbors, Cell, Grid, Dimension
+from definitions import Neighbors, Cell, Grid, Dimensions
 from constants import FRAME_LIMIT
 
 
 def execute_full_game(initial_grid: Grid, *, frame_limit: Optional[int] = None,
-                      dimensions: Dimension) -> list[Grid]:
+                      dimensions: Dimensions) -> list[Grid]:
     current_grid = initial_grid
     all_grids = [initial_grid]
     frame_number = 0
@@ -18,9 +18,6 @@ def execute_full_game(initial_grid: Grid, *, frame_limit: Optional[int] = None,
 
         # limit grid size
         new_grid = set(filter(partial(within_dimensions, dimensions), new_grid))
-        # else:
-        # max_dif_x = max(new_grid, )
-        # what if sth goes ridiculoslousy far?
 
         # limit frames
         if frame_limit is None and new_grid in all_grids:
@@ -30,15 +27,17 @@ def execute_full_game(initial_grid: Grid, *, frame_limit: Optional[int] = None,
         if frame_number >= FRAME_LIMIT:
             break
 
+        frame_number += 1
+        current_grid = new_grid
         all_grids.append(new_grid)
 
     return all_grids
 
 
-def within_dimensions(dimensions: Dimension, cell: Cell) -> bool:
+def within_dimensions(dimensions: Dimensions, cell: Cell) -> bool:
     width, height = dimensions
     x, y = cell
-    return 0 <= x <= width and 0 <= y <= height
+    return 0 <= x < width and 0 <= y < height
 
 
 def get_neighbors(grid: Grid, x: int, y: int) -> Neighbors:

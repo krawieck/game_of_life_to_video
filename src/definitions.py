@@ -2,7 +2,7 @@ from dataclasses import dataclass, astuple
 
 
 @dataclass
-class Dimension:
+class Dimensions:
     width: int
     height: int
 
@@ -36,5 +36,5 @@ class Neighbors:
 
 @dataclass
 class Board:
-    dim: Dimension
+    dim: Dimensions
     grid: Grid
