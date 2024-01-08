@@ -1,3 +1,9 @@
+"""
+This module has everything related to executing the pure game of life. It is heavily based on
+[this implementation](https://matgomes.com/conways-game-of-life-python/). Only modified slightly,
+mostly to use ``dataclasse`` instead of ``namedtuple``. But that's in definitions.py.
+"""
+
 from collections import defaultdict
 from copy import deepcopy
 from typing import Optional
@@ -9,6 +15,14 @@ from constants import FRAME_LIMIT
 
 def execute_full_game(initial_grid: Grid, *, frame_limit: Optional[int] = None,
                       dimensions: Dimensions) -> list[Grid]:
+    """
+    Executes the full game of life. Stops only if the ``frame_limit`` has been reached or the grid starts repeating.
+
+    :param initial_grid: Starting state
+    :param frame_limit: Limits the number of iterations that the game will go on
+    :param dimensions: Dimensions of the grid on which the game will be executed
+    :return: A list of all the subsequent iterations of the game of life.
+    """
     current_grid = initial_grid
     all_grids = [initial_grid]
     frame_number = 0
@@ -35,6 +49,12 @@ def execute_full_game(initial_grid: Grid, *, frame_limit: Optional[int] = None,
 
 
 def within_dimensions(dimensions: Dimensions, cell: Cell) -> bool:
+    """
+    Helper function that determines if a ``cell`` is within ``dimensions``
+    :param dimensions:
+    :param cell:
+    :return: a boolean
+    """
     width, height = dimensions
     x, y = cell
     return 0 <= x < width and 0 <= y < height
