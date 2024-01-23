@@ -1,18 +1,20 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "game_of_life"
-version = "0.0.1"
+[tool.poetry]
+name = "goltv"
+version = "0.1.0"
 description = "GOL to video"
+authors = ["Filip Krawczyk <fil.krawczyk@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.8"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
-]
-dependencies = [
-    "opencv-python",
-    "ffmpeg-python",
-]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+opencv-python = "^4.9.0.80"
+ffmpeg-python = "^0.2.0"
+click = "^8.1.7"
+numpy = "^1.26.3"
+
+[tool.poetry.scripts]
+goltv = "goltv:cli"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
