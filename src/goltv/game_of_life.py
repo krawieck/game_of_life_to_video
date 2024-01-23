@@ -1,7 +1,14 @@
 """
 This module has everything related to executing the pure game of life. It is heavily based on
-[this implementation](https://matgomes.com/conways-game-of-life-python/). Only modified slightly,
-mostly to use ``dataclasse`` instead of ``namedtuple``. But that's in definitions.py.
+[this implementation](https://matgomes.com/conways-game-of-life-python/).
+
+The modifications are as such:
+* some names of variables are different
+* functions were added
+    * ``execute_full_game``
+    * ``within_dimensions``
+
+Other modifications in [``definitions``](definitions)
 """
 
 from collections import defaultdict
@@ -9,14 +16,16 @@ from copy import deepcopy
 from typing import Optional
 from functools import partial
 
-from definitions import Neighbors, Cell, Grid, Dimensions
-from constants import FRAME_LIMIT
+from goltv.definitions import Neighbors, Cell, Grid, Dimensions
+from goltv.constants import FRAME_LIMIT
+
+import re
 
 
 def execute_full_game(initial_grid: Grid, *, frame_limit: Optional[int] = None,
                       dimensions: Dimensions) -> list[Grid]:
     """
-    Executes the full game of life. Stops only if the ``frame_limit`` has been reached or the grid starts repeating.
+    Executes a full game of life. Stops only if the ``frame_limit`` has been reached or the grid starts repeating.
 
     :param initial_grid: Starting state
     :param frame_limit: Limits the number of iterations that the game will go on
@@ -34,11 +43,9 @@ def execute_full_game(initial_grid: Grid, *, frame_limit: Optional[int] = None,
         new_grid = set(filter(partial(within_dimensions, dimensions), new_grid))
 
         # limit frames
-        if frame_limit is None and new_grid in all_grids:
+        if frame_limit is None and new_grid in all_grids or frame_number >= FRAME_LIMIT:
             break
         if frame_limit is not None and frame_limit <= frame_number:
-            break
-        if frame_number >= FRAME_LIMIT:
             break
 
         frame_number += 1
@@ -53,7 +60,7 @@ def within_dimensions(dimensions: Dimensions, cell: Cell) -> bool:
     Helper function that determines if a ``cell`` is within ``dimensions``
     :param dimensions:
     :param cell:
-    :return: a boolean
+    :return: True if the cell is within the dimensions, False otherwise
     """
     width, height = dimensions
     x, y = cell
@@ -61,6 +68,14 @@ def within_dimensions(dimensions: Dimensions, cell: Cell) -> bool:
 
 
 def get_neighbors(grid: Grid, x: int, y: int) -> Neighbors:
+    """
+    Get the alive and dead neighbors of a cell in the grid.
+
+    :param grid: The current state of the grid
+    :param x: X-coordinate of the cell
+    :param y: Y-coordinate of the cell
+    :return: Neighbors object with dead and alive neighbors
+    """
     offsets = [(-1, -1), (0, -1), (1, -1), (-1, 0),
                (1, 0), (-1, 1), (0, 1), (1, 1)]
     possible_neighbors = {Cell(x + x_add, y + y_add) for x_add, y_add in offsets}
@@ -69,6 +84,12 @@ def get_neighbors(grid: Grid, x: int, y: int) -> Neighbors:
 
 
 def next_round(old_grid: Grid) -> Grid:
+    """
+    Compute the next iteration of the game of life based on the provided grid.
+
+    :param old_grid: The current state of the grid
+    :return: The next state of the grid
+    """
     new_grid = deepcopy(old_grid)
     may_be_resurected = defaultdict(int)
 
@@ -87,13 +108,3 @@ def next_round(old_grid: Grid) -> Grid:
 
     return new_grid
 
-
-def grid_from_string(string: str) -> Grid:
-    """
-    converts a string to a Grid. should be formatted like this:
-    <x> <y>  <x> <y> ...
-
-    :param string:
-    :return:
-    """
-    return {Cell(int(x), int(y)) for x, y in map(lambda s: s.split(' '), string.split('  '))}
